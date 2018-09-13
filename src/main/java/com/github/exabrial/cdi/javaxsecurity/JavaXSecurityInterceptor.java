@@ -1,6 +1,5 @@
 package com.github.exabrial.cdi.javaxsecurity;
 
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import javax.annotation.security.RolesAllowed;
@@ -24,9 +23,9 @@ public class JavaXSecurityInterceptor {
 
 	@AroundInvoke
 	public Object intercept(InvocationContext ctx) throws Exception {
-		boolean skipSecurity = Optional.ofNullable(skipSecurityInstance.get()).orElse(Boolean.FALSE);
+		boolean skipSecurity = skipSecurityInstance.isUnsatisfied() ? false : skipSecurityInstance.get();
 		if (!skipSecurity) {
-			if (!javaXSecurityChecker.isAuthenticated()) {
+			if (javaXSecurityChecker.authenticate()) {
 				RolesAllowed rolesAllowed = ctx.getMethod().getAnnotation(RolesAllowed.class);
 				if (rolesAllowed == null) {
 					rolesAllowed = ctx.getTarget().getClass().getAnnotation(RolesAllowed.class);
@@ -41,9 +40,9 @@ public class JavaXSecurityInterceptor {
 			} else {
 				handler.authenticationFailure();
 			}
-		} else {
-			Optional.ofNullable(logInstance.get()).ifPresent(log -> log.warn("check() Security disabled; skipping check for:{}:{}",
-					ctx.getTarget().getClass().getName(), ctx.getMethod().getName()));
+		} else if (!logInstance.isUnsatisfied()) {
+			logInstance.get().warn("check() Security disabled; skipping check for:{}:{}", ctx.getTarget().getClass().getName(),
+					ctx.getMethod().getName());
 		}
 		return ctx.proceed();
 	}

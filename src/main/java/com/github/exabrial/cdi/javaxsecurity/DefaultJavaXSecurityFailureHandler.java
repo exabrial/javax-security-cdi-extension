@@ -2,10 +2,8 @@ package com.github.exabrial.cdi.javaxsecurity;
 
 import java.lang.reflect.Method;
 import java.util.Base64;
-import java.util.Optional;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Default;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -15,7 +13,6 @@ import javax.ws.rs.core.Response;
 
 import org.slf4j.Logger;
 
-@Default
 @ApplicationScoped
 public class DefaultJavaXSecurityFailureHandler implements JavaXSecurityFailureHandler {
 	@Inject
@@ -25,7 +22,7 @@ public class DefaultJavaXSecurityFailureHandler implements JavaXSecurityFailureH
 
 	@Override
 	public void authenticationFailure() {
-		Optional.ofNullable(logInstance.get()).ifPresent(log -> {
+		if (!logInstance.isUnsatisfied()) {
 			String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 			String decoded;
 			try {
@@ -34,16 +31,18 @@ public class DefaultJavaXSecurityFailureHandler implements JavaXSecurityFailureH
 			} catch (Exception e) {
 				decoded = null;
 			}
-			log.warn("authenticationFailure() remoteAddr:{} authorization header:{}[{}]", request.getRemoteAddr(), authHeader, decoded);
-		});
+			logInstance.get().warn("authenticationFailure() remoteAddr:{} authorization header:{}[{}]", request.getRemoteAddr(), authHeader,
+					decoded);
+		}
 		throw new WebApplicationException(Response.Status.UNAUTHORIZED);
 	}
 
 	@Override
 	public void authorizationFailure(Class<? extends Object> targetClass, Method targetMethod, String roleName) {
-		Optional.ofNullable(logInstance.get()).ifPresent(
-				log -> log.warn("authorizationFailure() user:{} is authenticated, but doesn't have role:{} required for invoking:{}:{}",
-						request.getRemoteUser(), roleName, targetClass.getName(), targetMethod.getName()));
+		if (!logInstance.isUnsatisfied()) {
+			logInstance.get().warn("authorizationFailure() user:{} is authenticated, but doesn't have role:{} required for invoking:{}:{}",
+					request.getRemoteUser(), roleName, targetClass.getName(), targetMethod.getName());
+		}
 		throw new WebApplicationException(Response.Status.UNAUTHORIZED);
 	}
 }

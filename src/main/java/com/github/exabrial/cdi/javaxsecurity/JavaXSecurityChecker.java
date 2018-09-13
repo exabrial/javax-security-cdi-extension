@@ -3,22 +3,22 @@ package com.github.exabrial.cdi.javaxsecurity;
 import java.io.IOException;
 
 import javax.enterprise.context.RequestScoped;
-import javax.enterprise.inject.Default;
-import javax.inject.Inject;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.ext.Provider;
 
-@Default
 @RequestScoped
+@Provider
 public class JavaXSecurityChecker {
-	@Inject
+	@Context
 	private HttpServletRequest request;
-	@Inject
+	@Context
 	private HttpServletResponse response;
 	private Boolean authenticated = null;
 
-	public boolean isAuthenticated() {
+	public boolean authenticate() {
 		if (authenticated == null) {
 			authenticated = checkAuthentication();
 		}
