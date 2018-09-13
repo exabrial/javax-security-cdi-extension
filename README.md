@@ -70,7 +70,6 @@ Example CDI Logger Producer:
  @Dependent
  public Logger createLogger(final InjectionPoint injectionPoint) {
   Class<?> declaringClass = injectionPoint.getMember().getDeclaringClass();
-  log.debug("createLogger() declaringClass:{}", declaringClass);
   return LoggerFactory.getLogger(declaringClass);
  }
 ```
