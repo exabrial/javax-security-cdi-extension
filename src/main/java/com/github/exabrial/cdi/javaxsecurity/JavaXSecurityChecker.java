@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 @RequestScoped
 public class JavaXSecurityChecker {
 	@Inject
-	private Instance<Logger> log;
+	private Instance<Logger> logInstance;
 	@Inject
 	@SkipSecurity
 	private Instance<Boolean> skipSecurityInstance;
@@ -31,7 +31,7 @@ public class JavaXSecurityChecker {
 	private boolean authBeenAttempted = false;
 
 	public void check(String roleName) {
-		Optional.ofNullable(log.get()).ifPresent(log -> log.trace("check() roleName:{}", roleName));
+		Optional.ofNullable(logInstance.get()).ifPresent(log -> log.trace("check() roleName:{}", roleName));
 		boolean skipSecurity = Optional.ofNullable(skipSecurityInstance.get()).orElse(Boolean.FALSE);
 		if (!skipSecurity) {
 			if (!authBeenAttempted) {
@@ -40,7 +40,7 @@ public class JavaXSecurityChecker {
 				throw new WebApplicationException(Response.Status.UNAUTHORIZED);
 			}
 		} else {
-			Optional.ofNullable(log.get()).ifPresent(log -> log.warn("check() Security disabled; skipping check for roleName:{}", roleName));
+			Optional.ofNullable(logInstance.get()).ifPresent(log -> log.warn("check() Security disabled; skipping check for roleName:{}", roleName));
 		}
 	}
 
@@ -49,7 +49,7 @@ public class JavaXSecurityChecker {
 		try {
 			final boolean authenticated = request.authenticate(response);
 			if (!authenticated) {
-				Optional.ofNullable(log.get()).ifPresent(log -> {
+				Optional.ofNullable(logInstance.get()).ifPresent(log -> {
 					String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 					String decoded;
 					try {
