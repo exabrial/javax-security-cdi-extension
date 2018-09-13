@@ -29,10 +29,12 @@ You must be in a servlet lifecycle. Said differently: you have to be handling an
 Maven Coordinates:
 
 ```
+<dependency>
  <groupId>com.github.exabrial</groupId>
  <artifactId>javax-security-cdi-extension</artifactId>
  <version>1.0.0</version>
  <scope>runtime</scope>
+</dependency>
 ```
 
 If you are customizing the behavior, your `scope` will need to be `compile`.
