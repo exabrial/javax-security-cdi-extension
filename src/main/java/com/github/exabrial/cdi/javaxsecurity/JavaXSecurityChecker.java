@@ -31,7 +31,11 @@ public class JavaXSecurityChecker {
 
 	private boolean checkAuthentication() {
 		try {
-			return request.authenticate(response);
+			if (request.getUserPrincipal() == null) {
+				return request.authenticate(response);
+			} else {
+				return true;
+			}
 		} catch (IOException | ServletException e) {
 			throw new RuntimeException(e);
 		}
