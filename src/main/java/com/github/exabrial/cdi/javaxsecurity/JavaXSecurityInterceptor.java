@@ -18,12 +18,9 @@ public class JavaXSecurityInterceptor {
 			rolesAllowed = ctx.getTarget().getClass().getAnnotation(RolesAllowed.class);
 		}
 		if (rolesAllowed != null) {
-			String[] value = rolesAllowed.value();
-			if (value != null) {
-				Stream.of(value).forEach(roleName -> {
-					javaXSecurityChecker.check(roleName);
-				});
-			}
+			Stream.of(rolesAllowed.value()).forEach(roleName -> {
+				javaXSecurityChecker.check(roleName);
+			});
 		}
 		return ctx.proceed();
 	}
