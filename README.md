@@ -20,6 +20,10 @@ If the person doesn't have the the required role, the `DefaultJavaXSecurityFailu
 ## Motivation
 A common mistake is that someone sees [javax.annotation.security](https://docs.oracle.com/javaee/7/api/javax/annotation/security/RolesAllowed.html) and applies it to a CDI bean, thinking since it belongs to a general javax package, and not a EJB package. Well it doesn't sadly, it only works for EJB (Stateless, Stateful, Singleton, and MDB).
 
+## License
+
+All files in this project are licensed Apache Source License 2.0. Please consider submitting any changes you make back to this project!
+
 ## Caveats
 
 You must be in a servlet lifecycle. Said differently: you have to be handling an HTTP Request. If the bean is being called by another initiator like an MDB or Timer, you'll run into some problems (and you probably have a bug in your program too).
