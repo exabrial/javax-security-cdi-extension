@@ -76,7 +76,7 @@ Example CDI Logger Producer:
 
 ### Disabling
 
-If you want to disable security (maybe for localhost development), you can disable it by creating a Boolean CDI Producer with the qualifer `com.github.exabrial.cdi.javaxsecurity`:
+If you want to disable security (maybe for localhost development), you can disable it by creating a Boolean CDI Producer with the qualifer `@com.github.exabrial.cdi.javaxsecurity.SkipSecurity`:
 
 Example of skipping security:
 
