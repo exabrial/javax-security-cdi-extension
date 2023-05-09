@@ -16,6 +16,7 @@ public class DefaultJavaXSecurityFailureHandler implements JavaXSecurityFailureH
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	@Inject
+	@JavaxSecurityHttpRequest
 	private HttpServletRequest request;
 
 	@Override
