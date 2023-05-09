@@ -55,7 +55,7 @@ public class JavaXSecurityInterceptor implements Serializable {
 			} else {
 				handler.authenticationFailure();
 			}
-		} else if (log != null) {
+		} else {
 			log.warn("check() Security disabled; skipping check at:{}:{}()", ctx.getTarget().getClass().getName(),
 					ctx.getMethod().getName());
 		}

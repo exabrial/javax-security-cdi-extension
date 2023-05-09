@@ -1,5 +1,5 @@
 # javax-security-cdi-extension
-A CDI Portable Extension for Java EE 7 (and probably Java EE 8) that allows you to use `@RolesAllowed({"role-name"})` on CDI Beans and their Methods.
+A CDI Portable Extension for Java EE 8 that allows you to use `@RolesAllowed({"role-name"})` on CDI Beans and their Methods.
 
 ## TL;DR
 
@@ -36,7 +36,7 @@ Maven Coordinates:
 <dependency>
  <groupId>com.github.exabrial</groupId>
  <artifactId>javax-security-cdi-extension</artifactId>
- <version>1.0.0</version>
+ <version>2.0.0</version>
  <scope>runtime</scope>
 </dependency>
 ```
