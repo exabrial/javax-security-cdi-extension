@@ -1,10 +1,7 @@
 package com.github.exabrial.cdi.javaxsecurity;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.lang.reflect.Modifier;
+import java.util.regex.Pattern;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.Asynchronous;
@@ -17,72 +14,79 @@ import javax.ejb.Singleton;
 import javax.ejb.Stateful;
 import javax.ejb.Stateless;
 import javax.enterprise.event.Observes;
+import javax.enterprise.inject.spi.AnnotatedMethod;
 import javax.enterprise.inject.spi.AnnotatedType;
 import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
-import javax.interceptor.Interceptors;
+import javax.enterprise.inject.spi.configurator.AnnotatedMethodConfigurator;
 
-import org.apache.deltaspike.core.util.metadata.AnnotationInstanceProvider;
-import org.apache.deltaspike.core.util.metadata.builder.AnnotatedTypeBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JavaXSecurityCDIPortableExtension implements Extension {
-	<T> void processAnnotatedType(@Observes ProcessAnnotatedType<T> pat) {
-		AnnotatedType<T> annotatedType = pat.getAnnotatedType();
-		AnnotatedTypeBuilder<T> builder = new AnnotatedTypeBuilder<T>().readFromType(annotatedType);
+	private final Logger log = LoggerFactory.getLogger(getClass());
+	private final Pattern securePattern;
+	private final Pattern ignorePattern;
+
+	public JavaXSecurityCDIPortableExtension() {
+		final String securePatternString = System.getProperty("JavaXSecurityCDIPortableExtension.securePattern");
+		final String ignorePatternString = System.getProperty("JavaXSecurityCDIPortableExtension.ignorePattern");
+
+		if (securePatternString != null) {
+			securePattern = Pattern.compile(securePatternString);
+		} else {
+			securePattern = null;
+		}
+
+		if (ignorePatternString != null) {
+			ignorePattern = Pattern.compile(ignorePatternString);
+		} else {
+			ignorePattern = null;
+		}
+	}
+
+	public <T> void processAnnotatedType(@Observes final ProcessAnnotatedType<T> processAnnotatedType) {
+		final AnnotatedType<T> annotatedType = processAnnotatedType.getAnnotatedType();
 		// TODO The goal here is to skip adding interceptors to any EJB class, since
 		// RolesAllowed will work there. This check isn't that great, but it's a start
 		// :/
-		if (!annotatedType.isAnnotationPresent(Singleton.class) && !annotatedType.isAnnotationPresent(MessageDriven.class)
-				&& !annotatedType.isAnnotationPresent(Stateless.class) && !annotatedType.isAnnotationPresent(Stateful.class)
-				&& !annotatedType.isAnnotationPresent(Remote.class) && !annotatedType.isAnnotationPresent(Local.class)
-				&& !annotatedType.isAnnotationPresent(Lock.class) && !annotatedType.isAnnotationPresent(Asynchronous.class)
-				&& !annotatedType.isAnnotationPresent(LocalBean.class)) {
-			addInterceptorToClass(annotatedType, builder);
-			addInterceptorToMethods(annotatedType, builder);
-			pat.setAnnotatedType(builder.create());
+		if (accept(annotatedType.getJavaClass().getName()) && !annotatedType.isAnnotationPresent(Singleton.class)
+				&& !annotatedType.isAnnotationPresent(MessageDriven.class) && !annotatedType.isAnnotationPresent(Stateless.class)
+				&& !annotatedType.isAnnotationPresent(Stateful.class) && !annotatedType.isAnnotationPresent(Remote.class)
+				&& !annotatedType.isAnnotationPresent(Local.class) && !annotatedType.isAnnotationPresent(Lock.class)
+				&& !annotatedType.isAnnotationPresent(Asynchronous.class) && !annotatedType.isAnnotationPresent(LocalBean.class)) {
+			if (annotatedType.getAnnotation(RolesAllowed.class) != null) {
+				log.info("processAnnotatedType() enforcing:{} on:{}", annotatedType.getAnnotation(RolesAllowed.class),
+						annotatedType.getJavaClass());
+				processAnnotatedType.configureAnnotatedType().add(EnforceRolesAllowed.LITERAL);
+			}
+			addInterceptorToApplicableMethods(processAnnotatedType);
 		}
 	}
 
-	private <T> void addInterceptorToClass(AnnotatedType<T> annotatedType, AnnotatedTypeBuilder<T> builder) {
-		RolesAllowed rolesAllowed = annotatedType.getAnnotation(RolesAllowed.class);
-		if (rolesAllowed != null) {
-			Interceptors toAdd = annotatedType.getAnnotation(Interceptors.class);
-			if (toAdd == null) {
-				toAdd = interceptors(new Class<?>[0]);
-			} else {
-				builder.removeFromClass(Interceptors.class);
-				toAdd = appendToInterceptors(toAdd);
-			}
-			builder.addToClass(toAdd);
+	protected boolean accept(final String className) {
+		boolean accept = true;
+		if (securePattern != null && !securePattern.matcher(className).matches()) {
+			accept = false;
 		}
+		if (accept && ignorePattern != null && ignorePattern.matcher(className).matches()) {
+			accept = false;
+		}
+		return accept;
 	}
 
-	private <T> void addInterceptorToMethods(AnnotatedType<T> annotatedType, AnnotatedTypeBuilder<T> builder) {
-		annotatedType.getMethods().forEach(method -> {
-			RolesAllowed rolesAllowed = method.getAnnotation(RolesAllowed.class);
-			if (rolesAllowed != null) {
-				Interceptors toAdd = method.getAnnotation(Interceptors.class);
-				if (toAdd == null) {
-					toAdd = interceptors(new Class<?>[0]);
-				} else {
-					builder.removeFromMethod(method, Interceptors.class);
-					toAdd = appendToInterceptors(toAdd);
-				}
-				builder.addToMethod(method, toAdd);
-			}
-		});
-	}
-
-	private Interceptors appendToInterceptors(Interceptors toAdd) {
-		Class<?>[] oldValue = toAdd.value();
-		return interceptors(oldValue);
-	}
-
-	private Interceptors interceptors(Class<?>[] value) {
-		Map<String, Class<?>[]> arguments = new HashMap<>();
-		List<Class<?>> classes = Stream.of(value).collect(Collectors.toList());
-		classes.add(JavaXSecurityInterceptor.class);
-		arguments.put("value", classes.toArray(new Class<?>[classes.size()]));
-		return AnnotationInstanceProvider.of(Interceptors.class, arguments);
+	private <T> void addInterceptorToApplicableMethods(final ProcessAnnotatedType<T> processAnnotatedType) {
+		final AnnotatedType<T> annotatedType = processAnnotatedType.getAnnotatedType();
+		final Class<?> clazz = annotatedType.getJavaClass();
+		processAnnotatedType.configureAnnotatedType()
+				.filterMethods(
+						(final AnnotatedMethod<? super T> filterCandidate) -> filterCandidate.getJavaMember().getDeclaringClass().equals(clazz)
+								&& !Modifier.isPrivate(filterCandidate.getJavaMember().getModifiers())
+								&& filterCandidate.isAnnotationPresent(RolesAllowed.class))
+				.forEach((final AnnotatedMethodConfigurator<? super T> configurator) -> {
+					log.info("processAnnotatedType() enforcing:{} on:{}", configurator.getAnnotated().getAnnotation(RolesAllowed.class),
+							configurator.getAnnotated().getJavaMember());
+					configurator.add(EnforceRolesAllowed.LITERAL);
+				});
 	}
 }

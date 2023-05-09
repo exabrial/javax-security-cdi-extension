@@ -10,6 +10,6 @@ import javax.inject.Qualifier;
 @Qualifier
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.CONSTRUCTOR })
-public @interface SkipSecurity {
+public @interface JavaxSecurityHttpRequest {
 
 }

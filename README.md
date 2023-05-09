@@ -65,22 +65,11 @@ Example `WEB-INF/web.xml` for Basic auth:
 ## Configuration/Customization
 
 ### Logging
-If you have a CDI `@Producer` for SLF4J loggers, the extension will produce useful warning logs on failures. _You probably want to know if a bunch of login failures are happening in your apps,_ so I suggest doing this.
-
-Example CDI Logger Producer:
-
-```
- @Produces
- @Dependent
- public Logger createLogger(final InjectionPoint injectionPoint) {
-  Class<?> declaringClass = injectionPoint.getMember().getDeclaringClass();
-  return LoggerFactory.getLogger(declaringClass);
- }
-```
+All logs are kicked to Slf4j. You may optionally turn on logging by using any one of the implementations.
 
 ### Disabling
 
-If you want to disable security (maybe for localhost development), you can disable it by creating a Boolean CDI Producer with the qualifer `@com.github.exabrial.cdi.javaxsecurity.SkipSecurity`:
+If you want to disable security (maybe for localhost development), you can disable it by creating a Boolean CDI Producer with the qualifier `@com.github.exabrial.cdi.javaxsecurity.SkipSecurity`:
 
 Example of skipping security:
 

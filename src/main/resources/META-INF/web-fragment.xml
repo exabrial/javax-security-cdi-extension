@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-fragment
+	id="javax-security-cdi-extension"
+	version="4.0"
+	xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-fragment_4_0.xsd">
+	<display-name>javax-security-cdi-extension</display-name>
+	<name>javax_security_cdi_extension</name>
+	<ordering>
+		<after>
+			<others />
+		</after>
+	</ordering>
+</web-fragment>
